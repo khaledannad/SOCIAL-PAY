@@ -1,0 +1,337 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated Social Pay user profile, KYC status, and non-custodial tracking metrics.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "nationalIdOrPassport": { "type": "string" },
+        "kycLevel": {
+          "type": "string",
+          "enum": ["UNVERIFIED", "BASIC_LEVEL_1", "VERIFIED_PRO_LEVEL_2"]
+        },
+        "trustScorePercent": { "type": "number" },
+        "totalTradesCount": { "type": "integer" },
+        "completionRatePercent": { "type": "number" },
+        "spotBalanceUsdt": { "type": "number" },
+        "lockedEscrowUsdt": { "type": "number" },
+        "merchantCollateralUsdt": { "type": "number" },
+        "partnerCommissionsEarnedUsd": { "type": "number" },
+        "myActiveAdsCount": { "type": "integer" },
+        "onlineMerchant": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "fullName", "email", "phoneNumber", "nationalIdOrPassport",
+        "kycLevel", "trustScorePercent", "totalTradesCount", "completionRatePercent",
+        "spotBalanceUsdt", "lockedEscrowUsdt", "merchantCollateralUsdt",
+        "partnerCommissionsEarnedUsd", "myActiveAdsCount", "onlineMerchant",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "LinkedPaymentAccount": {
+      "title": "LinkedPaymentAccount",
+      "description": "User-linked external bank IBAN, e-wallet, or non-custodial destination rail.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "bankName": { "type": "string" },
+        "accountNumberOrIban": { "type": "string" },
+        "accountHolderName": { "type": "string" },
+        "accountType": {
+          "type": "string",
+          "enum": ["BANK_IBAN", "DIGITAL_WALLET", "INSTANT_RAIL"]
+        },
+        "currency": { "type": "string" },
+        "primaryDefault": { "type": "boolean" },
+        "verifiedStatus": {
+          "type": "string",
+          "enum": ["VERIFIED", "PENDING"]
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "bankName", "accountNumberOrIban", "accountHolderName",
+        "accountType", "currency", "primaryDefault", "verifiedStatus",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "PrivacyRequest": {
+      "title": "PrivacyRequest",
+      "description": "User-scoped privacy consent updates, data export records, and account deletion requests.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "requestType": {
+          "type": "string",
+          "enum": ["DATA_EXPORT", "ACCOUNT_DELETION", "CONSENT_UPDATE", "REVOKE_INTEGRATIONS"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SUBMITTED", "COMPLETED"]
+        },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "requestType", "status", "details", "createdAt", "updatedAt"]
+    },
+    "KycKybSubmission": {
+      "title": "KycKybSubmission",
+      "description": "Isolated individual KYC and business KYB identity verification records.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "applicantType": {
+          "type": "string",
+          "enum": ["INDIVIDUAL_KYC", "BUSINESS_KYB"]
+        },
+        "entityOrFullName": { "type": "string" },
+        "countryCode": { "type": "string" },
+        "registryOrIdNumber": { "type": "string" },
+        "documentReferenceHash": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_STARTED", "SUBMITTED", "UNDER_REVIEW", "VERIFIED", "REJECTED", "ACTION_REQUIRED", "EXPIRED"]
+        },
+        "reviewerNote": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId", "applicantType", "entityOrFullName", "countryCode",
+        "registryOrIdNumber", "documentReferenceHash", "status", "reviewerNote",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "MerchantProfile": {
+      "title": "MerchantProfile",
+      "description": "Business and Merchant Portal configuration isolated per corporate tenant.",
+      "type": "object",
+      "properties": {
+        "ownerUserId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "countryCode": { "type": "string" },
+        "kybStatus": {
+          "type": "string",
+          "enum": ["NOT_STARTED", "SUBMITTED", "UNDER_REVIEW", "VERIFIED", "REJECTED", "ACTION_REQUIRED", "EXPIRED"]
+        },
+        "webhookUrl": { "type": "string" },
+        "apiKeyReference": { "type": "string" },
+        "defaultStablecoin": { "type": "string", "enum": ["USDC", "USDT", "EURC", "PYUSD"] },
+        "defaultNetwork": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerUserId", "businessName", "countryCode", "kybStatus",
+        "webhookUrl", "apiKeyReference", "defaultStablecoin", "defaultNetwork",
+        "createdAt", "updatedAt"
+      ]
+    },
+    "MerchantStaffMember": {
+      "title": "MerchantStaffMember",
+      "description": "Role-scoped employee entry under a corporate merchant portal.",
+      "type": "object",
+      "properties": {
+        "merchantOwnerUid": { "type": "string" },
+        "staffEmail": { "type": "string" },
+        "staffName": { "type": "string" },
+        "role": { "type": "string", "enum": ["MANAGER", "CASHIER", "FINANCE_VIEWER", "INTEGRATION_DEV"] },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["merchantOwnerUid", "staffEmail", "staffName", "role", "active", "createdAt", "updatedAt"]
+    },
+    "LedgerTransactionRecord": {
+      "title": "LedgerTransactionRecord",
+      "description": "Immutable-amount stablecoin routing & reconciliation transaction record.",
+      "type": "object",
+      "properties": {
+        "senderUserId": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "intentId": { "type": "string" },
+        "stablecoinTicker": { "type": "string", "enum": ["USDC", "USDT", "PYUSD", "EURC", "FDUSD"] },
+        "networkCode": { "type": "string" },
+        "amount": { "type": "number" },
+        "declaredFeeUsd": { "type": "number" },
+        "recipientName": { "type": "string" },
+        "recipientAddressOrRail": { "type": "string" },
+        "providerId": { "type": "string" },
+        "providerReference": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["CREATED", "PENDING", "AUTHORIZED", "PROCESSING", "SETTLED", "FAILED", "CANCELLED", "UNDER_REVIEW"]
+        },
+        "reconciliationStatus": {
+          "type": "string",
+          "enum": ["MATCHED", "PENDING_PROVIDER_PROOF", "MISMATCH_BLOCKED"]
+        },
+        "disputeReason": { "type": "string" },
+        "idempotencyKey": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "senderUserId", "transactionId", "intentId", "stablecoinTicker", "networkCode",
+        "amount", "declaredFeeUsd", "recipientName", "recipientAddressOrRail",
+        "providerId", "providerReference", "state", "reconciliationStatus",
+        "disputeReason", "idempotencyKey", "createdAt", "updatedAt"
+      ]
+    },
+    "ConnectivityConnectorState": {
+      "title": "ConnectivityConnectorState",
+      "description": "Owner-governed non-secret status of external social, wallet, stablecoin, and banking connectors.",
+      "type": "object",
+      "properties": {
+        "connectorId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["AVAILABLE", "REQUESTED", "INTEGRATION_PENDING", "CONNECTED", "DISABLED", "ERROR"]
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["DEVELOPMENT", "STAGING", "SANDBOX", "PRODUCTION"]
+        },
+        "latencyMs": { "type": "integer" },
+        "statusNote": { "type": "string" },
+        "updatedByUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "connectorId", "name", "category", "status", "environment",
+        "latencyMs", "statusNote", "updatedByUid", "createdAt", "updatedAt"
+      ]
+    },
+    "SystemAuditLog": {
+      "title": "SystemAuditLog",
+      "description": "Append-only immutable audit log (cannot be updated or deleted even by Owner).",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string" },
+        "targetId": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "entryHash": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "targetId", "action", "details", "entryHash", "createdAt"]
+    },
+    "EmergencyIncident": {
+      "title": "EmergencyIncident",
+      "description": "Multi-tier incident response and selective service circuit-breaker records.",
+      "type": "object",
+      "properties": {
+        "ownerUid": { "type": "string" },
+        "title": { "type": "string" },
+        "affectedService": { "type": "string" },
+        "severity": { "type": "string", "enum": ["ELEVATED", "HIGH", "CRITICAL"] },
+        "phase": { "type": "string" },
+        "serviceIsolated": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerUid", "title", "affectedService", "severity", "phase", "serviceIsolated", "createdAt", "updatedAt"]
+    },
+    "UserFeedback": {
+      "title": "UserFeedback",
+      "description": "Direct user feedback and improvement suggestions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorEmail": { "type": "string" },
+        "category": { "type": "string" },
+        "rating": { "type": "integer" },
+        "message": { "type": "string" },
+        "sourceScreen": { "type": "string" },
+        "status": { "type": "string" },
+        "ownerNote": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "authorName", "authorEmail", "category", "rating", "message", "sourceScreen", "status", "ownerNote", "createdAt", "updatedAt"]
+    },
+    "PartnerApplication": {
+      "title": "PartnerApplication",
+      "description": "Partner and enterprise registration across all sectors.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "sector": { "type": "string" },
+        "platformType": { "type": "string" },
+        "websiteOrChannel": { "type": "string" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "countryCode": { "type": "string" },
+        "monthlyVolumeEstimateUsd": { "type": "number" },
+        "commissionPercent": { "type": "number" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "ownerReviewNote": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "companyName", "sector", "platformType", "websiteOrChannel", "contactName", "contactEmail", "contactPhone", "countryCode", "monthlyVolumeEstimateUsd", "commissionPercent", "status", "notes", "ownerReviewNote", "createdAt", "updatedAt"]
+    },
+    "OwnerSecurityConfig": {
+      "title": "OwnerSecurityConfig",
+      "description": "Strictly owner-only PBKDF2 PIN hash and salt.",
+      "type": "object",
+      "properties": {
+        "ownerUid": { "type": "string" },
+        "ownerEmail": { "type": "string" },
+        "pinHash": { "type": "string" },
+        "pinSalt": { "type": "string" },
+        "hashAlgorithm": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerUid", "ownerEmail", "pinHash", "pinSalt", "hashAlgorithm", "createdAt", "updatedAt"]
+    },
+    "OwnerPublicPlatformConfig": {
+      "title": "OwnerPublicPlatformConfig",
+      "description": "Platform governance settings controlled exclusively by the verified owner.",
+      "type": "object",
+      "properties": {
+        "ownerUid": { "type": "string" },
+        "fixedFeeUsd": { "type": "number" },
+        "partnerCommissionPercent": { "type": "number" },
+        "antiPhishingWord": { "type": "string" },
+        "allowPartnerRegistrations": { "type": "boolean" },
+        "maintenanceMode": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerUid", "fixedFeeUsd", "partnerCommissionPercent", "antiPhishingWord", "allowPartnerRegistrations", "maintenanceMode", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": { "$ref": "#/entities/UserProfile" } },
+    "/users/{userId}/payment_accounts/{accountId}": { "schema": { "$ref": "#/entities/LinkedPaymentAccount" } },
+    "/users/{userId}/privacy_requests/{requestId}": { "schema": { "$ref": "#/entities/PrivacyRequest" } },
+    "/kyc_kyb_submissions/{submissionId}": { "schema": { "$ref": "#/entities/KycKybSubmission" } },
+    "/merchant_profiles/{merchantId}": { "schema": { "$ref": "#/entities/MerchantProfile" } },
+    "/merchant_profiles/{merchantId}/staff/{staffId}": { "schema": { "$ref": "#/entities/MerchantStaffMember" } },
+    "/ledger_transactions/{txId}": { "schema": { "$ref": "#/entities/LedgerTransactionRecord" } },
+    "/connectivity_connectors/{connectorId}": { "schema": { "$ref": "#/entities/ConnectivityConnectorState" } },
+    "/system_audit_logs/{logId}": { "schema": { "$ref": "#/entities/SystemAuditLog" } },
+    "/emergency_incidents/{incidentId}": { "schema": { "$ref": "#/entities/EmergencyIncident" } },
+    "/feedback/{feedbackId}": { "schema": { "$ref": "#/entities/UserFeedback" } },
+    "/partners/{partnerId}": { "schema": { "$ref": "#/entities/PartnerApplication" } },
+    "/owner_config/security": { "schema": { "$ref": "#/entities/OwnerSecurityConfig" } },
+    "/owner_config/platform_public": { "schema": { "$ref": "#/entities/OwnerPublicPlatformConfig" } }
+  }
+}

@@ -1,0 +1,568 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isPlatformOwner() {
+      return isSignedIn()
+        && request.auth.token.email == 'khaledannad29@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'fullName', 'email', 'phoneNumber', 'nationalIdOrPassport',
+          'kycLevel', 'trustScorePercent', 'totalTradesCount', 'completionRatePercent',
+          'spotBalanceUsdt', 'lockedEscrowUsdt', 'merchantCollateralUsdt',
+          'partnerCommissionsEarnedUsd', 'myActiveAdsCount', 'onlineMerchant',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'fullName', 'email', 'phoneNumber', 'nationalIdOrPassport',
+          'kycLevel', 'trustScorePercent', 'totalTradesCount', 'completionRatePercent',
+          'spotBalanceUsdt', 'lockedEscrowUsdt', 'merchantCollateralUsdt',
+          'partnerCommissionsEarnedUsd', 'myActiveAdsCount', 'onlineMerchant',
+          'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId == userId
+        && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 120
+        && data.email is string && data.email.size() <= 160
+        && data.phoneNumber is string && data.phoneNumber.size() <= 32
+        && data.nationalIdOrPassport is string && data.nationalIdOrPassport.size() <= 64
+        && data.kycLevel in ['UNVERIFIED', 'BASIC_LEVEL_1', 'VERIFIED_PRO_LEVEL_2']
+        && (data.trustScorePercent is int || data.trustScorePercent is float)
+        && data.trustScorePercent >= 0 && data.trustScorePercent <= 100
+        && data.totalTradesCount is int && data.totalTradesCount >= 0
+        && (data.completionRatePercent is int || data.completionRatePercent is float)
+        && data.completionRatePercent >= 0 && data.completionRatePercent <= 100
+        && (data.spotBalanceUsdt is int || data.spotBalanceUsdt is float)
+        && data.spotBalanceUsdt >= 0
+        && (data.lockedEscrowUsdt is int || data.lockedEscrowUsdt is float)
+        && data.lockedEscrowUsdt >= 0
+        && (data.merchantCollateralUsdt is int || data.merchantCollateralUsdt is float)
+        && data.merchantCollateralUsdt >= 0
+        && (data.partnerCommissionsEarnedUsd is int || data.partnerCommissionsEarnedUsd is float)
+        && data.partnerCommissionsEarnedUsd >= 0
+        && data.myActiveAdsCount is int && data.myActiveAdsCount >= 0
+        && data.onlineMerchant is bool
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPaymentAccount(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'bankName', 'accountNumberOrIban', 'accountHolderName',
+          'accountType', 'currency', 'primaryDefault', 'verifiedStatus',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'bankName', 'accountNumberOrIban', 'accountHolderName',
+          'accountType', 'currency', 'primaryDefault', 'verifiedStatus',
+          'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId == userId
+        && data.bankName is string && data.bankName.size() >= 2 && data.bankName.size() <= 80
+        && data.accountNumberOrIban is string && data.accountNumberOrIban.size() >= 4 && data.accountNumberOrIban.size() <= 64
+        && data.accountHolderName is string && data.accountHolderName.size() >= 2 && data.accountHolderName.size() <= 120
+        && data.accountType in ['BANK_IBAN', 'DIGITAL_WALLET', 'INSTANT_RAIL']
+        && data.currency is string && data.currency.size() >= 2 && data.currency.size() <= 10
+        && data.primaryDefault is bool
+        && data.verifiedStatus in ['VERIFIED', 'PENDING']
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPrivacyRequest(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'requestType', 'status', 'details', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'requestType', 'status', 'details', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId == userId
+        && data.requestType in ['DATA_EXPORT', 'ACCOUNT_DELETION', 'CONSENT_UPDATE', 'REVOKE_INTEGRATIONS']
+        && data.status in ['SUBMITTED', 'COMPLETED']
+        && data.details is string && data.details.size() <= 1000
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidKycKybSubmission(data) {
+      return data.keys().hasAll([
+          'userId', 'applicantType', 'entityOrFullName', 'countryCode',
+          'registryOrIdNumber', 'documentReferenceHash', 'status', 'reviewerNote',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'applicantType', 'entityOrFullName', 'countryCode',
+          'registryOrIdNumber', 'documentReferenceHash', 'status', 'reviewerNote',
+          'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128
+        && data.applicantType in ['INDIVIDUAL_KYC', 'BUSINESS_KYB']
+        && data.entityOrFullName is string && data.entityOrFullName.size() >= 2 && data.entityOrFullName.size() <= 140
+        && data.countryCode is string && data.countryCode.size() >= 2 && data.countryCode.size() <= 8
+        && data.registryOrIdNumber is string && data.registryOrIdNumber.size() >= 3 && data.registryOrIdNumber.size() <= 80
+        && data.documentReferenceHash is string && data.documentReferenceHash.size() <= 256
+        && data.status in ['NOT_STARTED', 'SUBMITTED', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'ACTION_REQUIRED', 'EXPIRED']
+        && data.reviewerNote is string && data.reviewerNote.size() <= 500
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMerchantProfile(data) {
+      return data.keys().hasAll([
+          'ownerUserId', 'businessName', 'countryCode', 'kybStatus',
+          'webhookUrl', 'apiKeyReference', 'defaultStablecoin', 'defaultNetwork',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUserId', 'businessName', 'countryCode', 'kybStatus',
+          'webhookUrl', 'apiKeyReference', 'defaultStablecoin', 'defaultNetwork',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerUserId is string && data.ownerUserId.size() >= 1 && data.ownerUserId.size() <= 128
+        && data.businessName is string && data.businessName.size() >= 2 && data.businessName.size() <= 140
+        && data.countryCode is string && data.countryCode.size() >= 2 && data.countryCode.size() <= 8
+        && data.kybStatus in ['NOT_STARTED', 'SUBMITTED', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'ACTION_REQUIRED', 'EXPIRED']
+        && data.webhookUrl is string && data.webhookUrl.size() <= 300
+        && data.apiKeyReference is string && data.apiKeyReference.size() <= 120
+        && data.defaultStablecoin in ['USDC', 'USDT', 'PYUSD', 'EURC', 'FDUSD']
+        && data.defaultNetwork is string && data.defaultNetwork.size() >= 2 && data.defaultNetwork.size() <= 24
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMerchantStaff(data) {
+      return data.keys().hasAll([
+          'merchantOwnerUid', 'staffEmail', 'staffName', 'role', 'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'merchantOwnerUid', 'staffEmail', 'staffName', 'role', 'active', 'createdAt', 'updatedAt'
+        ])
+        && data.merchantOwnerUid is string && data.merchantOwnerUid.size() >= 1 && data.merchantOwnerUid.size() <= 128
+        && data.staffEmail is string && data.staffEmail.size() >= 3 && data.staffEmail.size() <= 160
+        && data.staffName is string && data.staffName.size() >= 1 && data.staffName.size() <= 120
+        && data.role in ['MANAGER', 'CASHIER', 'FINANCE_VIEWER', 'INTEGRATION_DEV']
+        && data.active is bool
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLedgerTransaction(data) {
+      return data.keys().hasAll([
+          'senderUserId', 'transactionId', 'intentId', 'stablecoinTicker', 'networkCode',
+          'amount', 'declaredFeeUsd', 'recipientName', 'recipientAddressOrRail',
+          'providerId', 'providerReference', 'state', 'reconciliationStatus',
+          'disputeReason', 'idempotencyKey', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'senderUserId', 'transactionId', 'intentId', 'stablecoinTicker', 'networkCode',
+          'amount', 'declaredFeeUsd', 'recipientName', 'recipientAddressOrRail',
+          'providerId', 'providerReference', 'state', 'reconciliationStatus',
+          'disputeReason', 'idempotencyKey', 'createdAt', 'updatedAt'
+        ])
+        && data.senderUserId is string && data.senderUserId.size() >= 1 && data.senderUserId.size() <= 128
+        && data.transactionId is string && data.transactionId.size() >= 4 && data.transactionId.size() <= 64
+        && data.intentId is string && data.intentId.size() >= 4 && data.intentId.size() <= 64
+        && data.stablecoinTicker in ['USDC', 'USDT', 'PYUSD', 'EURC', 'FDUSD']
+        && data.networkCode is string && data.networkCode.size() >= 2 && data.networkCode.size() <= 24
+        && (data.amount is int || data.amount is float) && data.amount > 0
+        && (data.declaredFeeUsd is int || data.declaredFeeUsd is float) && data.declaredFeeUsd >= 0
+        && data.recipientName is string && data.recipientName.size() >= 1 && data.recipientName.size() <= 120
+        && data.recipientAddressOrRail is string && data.recipientAddressOrRail.size() >= 1 && data.recipientAddressOrRail.size() <= 128
+        && data.providerId is string && data.providerId.size() >= 2 && data.providerId.size() <= 64
+        && data.providerReference is string && data.providerReference.size() <= 128
+        && data.state in ['CREATED', 'PENDING', 'AUTHORIZED', 'PROCESSING', 'SETTLED', 'FAILED', 'CANCELLED', 'UNDER_REVIEW']
+        && data.reconciliationStatus in ['MATCHED', 'PENDING_PROVIDER_PROOF', 'MISMATCH_BLOCKED']
+        && data.disputeReason is string && data.disputeReason.size() <= 500
+        && data.idempotencyKey is string && data.idempotencyKey.size() >= 4 && data.idempotencyKey.size() <= 128
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidConnectorState(data) {
+      return data.keys().hasAll([
+          'connectorId', 'name', 'category', 'status', 'environment',
+          'latencyMs', 'statusNote', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'connectorId', 'name', 'category', 'status', 'environment',
+          'latencyMs', 'statusNote', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.connectorId is string && data.connectorId.size() >= 2 && data.connectorId.size() <= 64
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 120
+        && data.category is string && data.category.size() >= 2 && data.category.size() <= 64
+        && data.status in ['AVAILABLE', 'REQUESTED', 'INTEGRATION_PENDING', 'CONNECTED', 'DISABLED', 'ERROR']
+        && data.environment in ['DEVELOPMENT', 'STAGING', 'SANDBOX', 'PRODUCTION']
+        && data.latencyMs is int && data.latencyMs >= 0
+        && data.statusNote is string && data.statusNote.size() <= 400
+        && data.updatedByUid is string && data.updatedByUid == request.auth.uid
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll([
+          'actorUid', 'targetId', 'action', 'details', 'entryHash', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'actorUid', 'targetId', 'action', 'details', 'entryHash', 'createdAt'
+        ])
+        && data.actorUid is string && data.actorUid == request.auth.uid
+        && data.targetId is string && data.targetId.size() >= 1 && data.targetId.size() <= 128
+        && data.action is string && data.action.size() >= 2 && data.action.size() <= 80
+        && data.details is string && data.details.size() <= 600
+        && data.entryHash is string && data.entryHash.size() >= 32 && data.entryHash.size() <= 128
+        && data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidEmergencyIncident(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'title', 'affectedService', 'severity', 'phase', 'serviceIsolated', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'title', 'affectedService', 'severity', 'phase', 'serviceIsolated', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerUid is string && data.ownerUid == request.auth.uid
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 140
+        && data.affectedService is string && data.affectedService.size() >= 2 && data.affectedService.size() <= 80
+        && data.severity in ['ELEVATED', 'HIGH', 'CRITICAL']
+        && data.phase is string && data.phase.size() >= 2 && data.phase.size() <= 64
+        && data.serviceIsolated is bool
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll([
+          'userId', 'authorName', 'authorEmail', 'category', 'rating',
+          'message', 'sourceScreen', 'status', 'ownerNote', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'authorName', 'authorEmail', 'category', 'rating',
+          'message', 'sourceScreen', 'status', 'ownerNote', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 120
+        && data.authorEmail is string && data.authorEmail.size() <= 160
+        && data.category in ['UI_UX', 'PAYMENTS_QR', 'PARTNERS', 'SECURITY', 'PERFORMANCE', 'FEATURE_IDEA', 'BUG_REPORT']
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.message is string && data.message.size() >= 3 && data.message.size() <= 1500
+        && data.sourceScreen is string && data.sourceScreen.size() >= 1 && data.sourceScreen.size() <= 64
+        && data.status in ['OPEN', 'REVIEWED', 'RESOLVED']
+        && data.ownerNote is string && data.ownerNote.size() <= 500
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPartnerApplication(data) {
+      return data.keys().hasAll([
+          'userId', 'companyName', 'sector', 'platformType', 'websiteOrChannel',
+          'contactName', 'contactEmail', 'contactPhone', 'countryCode',
+          'monthlyVolumeEstimateUsd', 'commissionPercent', 'status',
+          'notes', 'ownerReviewNote', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'companyName', 'sector', 'platformType', 'websiteOrChannel',
+          'contactName', 'contactEmail', 'contactPhone', 'countryCode',
+          'monthlyVolumeEstimateUsd', 'commissionPercent', 'status',
+          'notes', 'ownerReviewNote', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 120
+        && data.sector in [
+          'ECOMMERCE_RETAIL', 'FINTECH_PAYMENTS', 'TELECOM_MOBILE', 'MEDIA_CREATORS',
+          'LOGISTICS_DELIVERY', 'SAAS_ENTERPRISE', 'TRAVEL_HOSPITALITY', 'EDUCATION_EDTECH',
+          'HEALTHCARE_CLINICS', 'REAL_ESTATE', 'GAMING_ENTERTAINMENT', 'GENERAL_TRADING'
+        ]
+        && data.platformType in [
+          'TELEGRAM_WEBAPP', 'WHATSAPP_BUSINESS', 'INSTAGRAM_BIO',
+          'WEB_SDK', 'POS_RETAIL', 'MOBILE_APP', 'ENTERPRISE_API'
+        ]
+        && data.websiteOrChannel is string && data.websiteOrChannel.size() >= 2 && data.websiteOrChannel.size() <= 200
+        && data.contactName is string && data.contactName.size() >= 2 && data.contactName.size() <= 120
+        && data.contactEmail is string && data.contactEmail.size() >= 3 && data.contactEmail.size() <= 160
+        && data.contactPhone is string && data.contactPhone.size() <= 32
+        && data.countryCode is string && data.countryCode.size() >= 2 && data.countryCode.size() <= 8
+        && (data.monthlyVolumeEstimateUsd is int || data.monthlyVolumeEstimateUsd is float)
+        && data.monthlyVolumeEstimateUsd >= 0
+        && (data.commissionPercent is int || data.commissionPercent is float)
+        && data.commissionPercent >= 0 && data.commissionPercent <= 80
+        && data.status in ['PENDING_REVIEW', 'APPROVED', 'ACTIVE', 'SUSPENDED']
+        && data.notes is string && data.notes.size() <= 1000
+        && data.ownerReviewNote is string && data.ownerReviewNote.size() <= 500
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidOwnerSecurityConfig(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'ownerEmail', 'pinHash', 'pinSalt', 'hashAlgorithm', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'ownerEmail', 'pinHash', 'pinSalt', 'hashAlgorithm', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerUid is string && data.ownerUid == request.auth.uid
+        && data.ownerEmail is string && data.ownerEmail == 'khaledannad29@gmail.com'
+        && data.pinHash is string && data.pinHash.size() >= 32 && data.pinHash.size() <= 256
+        && data.pinSalt is string && data.pinSalt.size() >= 16 && data.pinSalt.size() <= 128
+        && data.hashAlgorithm in ['PBKDF2_SHA256', 'SHA256_SALTED']
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidOwnerPublicConfig(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'fixedFeeUsd', 'partnerCommissionPercent', 'antiPhishingWord',
+          'allowPartnerRegistrations', 'maintenanceMode', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'fixedFeeUsd', 'partnerCommissionPercent', 'antiPhishingWord',
+          'allowPartnerRegistrations', 'maintenanceMode', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerUid is string && data.ownerUid == request.auth.uid
+        && (data.fixedFeeUsd is int || data.fixedFeeUsd is float)
+        && data.fixedFeeUsd >= 0 && data.fixedFeeUsd <= 50
+        && (data.partnerCommissionPercent is int || data.partnerCommissionPercent is float)
+        && data.partnerCommissionPercent >= 0 && data.partnerCommissionPercent <= 80
+        && data.antiPhishingWord is string && data.antiPhishingWord.size() >= 3 && data.antiPhishingWord.size() <= 64
+        && data.allowPartnerRegistrations is bool
+        && data.maintenanceMode is bool
+        && data.createdAt is timestamp && data.createdAt <= request.time
+        && data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isPlatformOwner();
+      allow list: if isPlatformOwner();
+      allow create: if isOwner(userId)
+        && isValidUserProfile(request.resource.data, userId);
+      allow update: if isOwner(userId)
+        && isValidUserProfile(request.resource.data, userId)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(userId);
+
+      match /payment_accounts/{accountId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidPaymentAccount(request.resource.data, userId);
+        allow update: if isOwner(userId)
+          && isValidPaymentAccount(request.resource.data, userId)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /privacy_requests/{requestId} {
+        allow get, list: if isOwner(userId) || isPlatformOwner();
+        allow create: if isOwner(userId)
+          && isValidPrivacyRequest(request.resource.data, userId);
+        allow update: if isPlatformOwner()
+          && isValidPrivacyRequest(request.resource.data, userId)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+    }
+
+    match /kyc_kyb_submissions/{submissionId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidKycKybSubmission(request.resource.data)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'SUBMITTED'
+        && request.resource.data.reviewerNote == '';
+      allow update: if (
+          isPlatformOwner()
+          && isValidKycKybSubmission(request.resource.data)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.createdAt == resource.data.createdAt
+        ) || (
+          isSignedIn()
+          && resource.data.userId == request.auth.uid
+          && resource.data.status in ['REJECTED', 'ACTION_REQUIRED', 'EXPIRED']
+          && isValidKycKybSubmission(request.resource.data)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.status == 'SUBMITTED'
+          && request.resource.data.reviewerNote == ''
+          && request.resource.data.createdAt == resource.data.createdAt
+        );
+      allow delete: if false;
+    }
+
+    match /merchant_profiles/{merchantId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.ownerUserId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidMerchantProfile(request.resource.data)
+        && request.resource.data.ownerUserId == request.auth.uid
+        && request.resource.data.kybStatus == 'NOT_STARTED';
+      allow update: if (
+          isPlatformOwner()
+          && isValidMerchantProfile(request.resource.data)
+          && request.resource.data.ownerUserId == resource.data.ownerUserId
+          && request.resource.data.createdAt == resource.data.createdAt
+        ) || (
+          isSignedIn()
+          && resource.data.ownerUserId == request.auth.uid
+          && isValidMerchantProfile(request.resource.data)
+          && request.resource.data.ownerUserId == resource.data.ownerUserId
+          && request.resource.data.kybStatus == resource.data.kybStatus
+          && request.resource.data.createdAt == resource.data.createdAt
+        );
+      allow delete: if isSignedIn() && resource.data.ownerUserId == request.auth.uid;
+
+      match /staff/{staffId} {
+        allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.merchantOwnerUid == request.auth.uid);
+        allow create: if isSignedIn()
+          && isValidMerchantStaff(request.resource.data)
+          && request.resource.data.merchantOwnerUid == request.auth.uid;
+        allow update: if isSignedIn()
+          && resource.data.merchantOwnerUid == request.auth.uid
+          && isValidMerchantStaff(request.resource.data)
+          && request.resource.data.merchantOwnerUid == resource.data.merchantOwnerUid
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isSignedIn() && resource.data.merchantOwnerUid == request.auth.uid;
+      }
+    }
+
+    match /ledger_transactions/{txId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.senderUserId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidLedgerTransaction(request.resource.data)
+        && request.resource.data.senderUserId == request.auth.uid
+        && request.resource.data.state in ['CREATED', 'PENDING']
+        && request.resource.data.disputeReason == '';
+      allow update: if (
+          isPlatformOwner()
+          && isValidLedgerTransaction(request.resource.data)
+          && request.resource.data.senderUserId == resource.data.senderUserId
+          && request.resource.data.transactionId == resource.data.transactionId
+          && request.resource.data.intentId == resource.data.intentId
+          && request.resource.data.stablecoinTicker == resource.data.stablecoinTicker
+          && request.resource.data.networkCode == resource.data.networkCode
+          && request.resource.data.amount == resource.data.amount
+          && request.resource.data.declaredFeeUsd == resource.data.declaredFeeUsd
+          && request.resource.data.recipientName == resource.data.recipientName
+          && request.resource.data.recipientAddressOrRail == resource.data.recipientAddressOrRail
+          && request.resource.data.createdAt == resource.data.createdAt
+        ) || (
+          isSignedIn()
+          && resource.data.senderUserId == request.auth.uid
+          && isValidLedgerTransaction(request.resource.data)
+          && request.resource.data.senderUserId == resource.data.senderUserId
+          && request.resource.data.transactionId == resource.data.transactionId
+          && request.resource.data.intentId == resource.data.intentId
+          && request.resource.data.stablecoinTicker == resource.data.stablecoinTicker
+          && request.resource.data.networkCode == resource.data.networkCode
+          && request.resource.data.amount == resource.data.amount
+          && request.resource.data.declaredFeeUsd == resource.data.declaredFeeUsd
+          && request.resource.data.recipientName == resource.data.recipientName
+          && request.resource.data.recipientAddressOrRail == resource.data.recipientAddressOrRail
+          && request.resource.data.createdAt == resource.data.createdAt
+        );
+      allow delete: if false;
+    }
+
+    match /connectivity_connectors/{connectorId} {
+      allow get, list: if isSignedIn();
+      allow create: if isPlatformOwner() && isValidConnectorState(request.resource.data);
+      allow update: if isPlatformOwner()
+        && isValidConnectorState(request.resource.data)
+        && request.resource.data.connectorId == resource.data.connectorId
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isPlatformOwner();
+    }
+
+    match /system_audit_logs/{logId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.actorUid == request.auth.uid);
+      allow create: if isSignedIn() && isValidAuditLog(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /emergency_incidents/{incidentId} {
+      allow get, list: if isPlatformOwner();
+      allow create: if isPlatformOwner() && isValidEmergencyIncident(request.resource.data);
+      allow update: if isPlatformOwner()
+        && isValidEmergencyIncident(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    match /feedback/{feedbackId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidFeedback(request.resource.data)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'OPEN'
+        && request.resource.data.ownerNote == '';
+      allow update: if isPlatformOwner()
+        && isValidFeedback(request.resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isPlatformOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /partners/{partnerId} {
+      allow get, list: if isPlatformOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidPartnerApplication(request.resource.data)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'PENDING_REVIEW'
+        && request.resource.data.commissionPercent <= 50
+        && request.resource.data.ownerReviewNote == '';
+      allow update: if (
+          isPlatformOwner()
+          && isValidPartnerApplication(request.resource.data)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.createdAt == resource.data.createdAt
+        ) || (
+          isSignedIn()
+          && resource.data.userId == request.auth.uid
+          && isValidPartnerApplication(request.resource.data)
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.commissionPercent == resource.data.commissionPercent
+          && request.resource.data.ownerReviewNote == resource.data.ownerReviewNote
+          && request.resource.data.createdAt == resource.data.createdAt
+        );
+      allow delete: if isPlatformOwner() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /owner_config/security {
+      allow get: if isPlatformOwner();
+      allow list, delete: if false;
+      allow create: if isPlatformOwner()
+        && isValidOwnerSecurityConfig(request.resource.data);
+      allow update: if isPlatformOwner()
+        && isValidOwnerSecurityConfig(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.ownerEmail == resource.data.ownerEmail
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /owner_config/platform_public {
+      allow get: if isSignedIn();
+      allow list, delete: if false;
+      allow create: if isPlatformOwner()
+        && isValidOwnerPublicConfig(request.resource.data);
+      allow update: if isPlatformOwner()
+        && isValidOwnerPublicConfig(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

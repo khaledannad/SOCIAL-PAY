@@ -1,0 +1,6 @@
+{
+  "name": "Social Pay",
+  "description": "المنصة المركزية المستقلة لإنشاء ومشاركة وإدارة طلبات المعاملات والفواتير عبر الشبكات الاجتماعية بروابط آمنة ورسوم ثابتة $0.80 وخالية من الربا",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
