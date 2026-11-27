@@ -164,34 +164,12 @@ fun OwnerPortalDialog(
             }
           }
         } else if (!isOwnerUnlocked) {
-          // Verified owner account -> Setup initial PIN or Verify PIN with scrambled keypad
-          when (isPinConfigured) {
-            null -> {
-              Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BrandPrimaryAccent)
-              }
-            }
-            false -> {
-              Text(
-                text = if (!isConfirmingNewPin) {
-                  if (isRtl) "إعداد الرقم السري الأولي للمالك (6 أرقام قوية)" else "Create Master Owner PIN (6 strong digits)"
-                } else {
-                  if (isRtl) "أعد إدخال الرقم السري للتأكيد" else "Confirm your 6-digit Master PIN"
-                },
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = BrandPrimaryAccent
-              )
-            }
-            true -> {
-              Text(
-                text = if (isRtl) "أدخل الرقم السري للمالك (لوحة مبعثرة للحماية)" else "Enter 6-Digit Owner Secret PIN",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = GoldAccent
-              )
-            }
-          }
+          Text(
+            text = if (isRtl) "أدخل الرقم السري للمالك (لوحة مبعثرة للحماية)" else "Enter 6-Digit Owner Secret PIN",
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = GoldAccent
+          )
 
           if (isPinConfigured != null) {
             Row(
@@ -243,34 +221,9 @@ fun OwnerPortalDialog(
                       if (enteredPin.length < 6) {
                         enteredPin += digit.toString()
                         if (enteredPin.length == 6) {
-                          if (isPinConfigured == false) {
-                            if (!isConfirmingNewPin) {
-                              if (OwnerSecurityHelper.isWeakPin(enteredPin)) {
-                                localError = if (isRtl) "اختر رقماً غير متسلسل أو مكرر" else "Choose a non-trivial strong PIN"
-                                enteredPin = ""
-                              } else {
-                                setupConfirmPin = enteredPin
-                                enteredPin = ""
-                                isConfirmingNewPin = true
-                              }
-                            } else {
-                              if (enteredPin == setupConfirmPin) {
-                                val pinToSave = enteredPin
-                                enteredPin = ""
-                                isConfirmingNewPin = false
-                                onSetupInitialPin(pinToSave)
-                              } else {
-                                localError = if (isRtl) "الرقمان غير متطابقين" else "PINs did not match"
-                                enteredPin = ""
-                                setupConfirmPin = ""
-                                isConfirmingNewPin = false
-                              }
-                            }
-                          } else {
-                            val pinToCheck = enteredPin
-                            enteredPin = ""
-                            onVerifyOwnerPin(pinToCheck)
-                          }
+                          val pinToCheck = enteredPin
+                          enteredPin = ""
+                          onVerifyOwnerPin(pinToCheck)
                         }
                       }
                     }

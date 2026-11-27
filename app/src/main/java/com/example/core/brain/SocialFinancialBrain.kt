@@ -351,12 +351,18 @@ class SocialFinancialBrain(
           "Vérifié par Social Financial Brain : Bénéficiaire ${summary.recipientName}, ${summary.amount} ${summary.stablecoinTicker} sur ${summary.network.displayNameFr}. Approbation explicite requise."
         AppLanguage.ENGLISH ->
           "Verified by Social Financial Brain: Recipient ${summary.recipientName}, ${summary.amount} ${summary.stablecoinTicker} on ${summary.network.displayNameEn}. Explicit approval required."
+        AppLanguage.RUSSIAN ->
+          "Проверено Social Financial Brain: Получатель ${summary.recipientName}, ${summary.amount} ${summary.stablecoinTicker} на ${summary.network.displayNameRu}. Требуется подтверждение."
+        AppLanguage.CHINESE ->
+          "经由 Social Financial Brain 验证：收款人 ${summary.recipientName}，金额 ${summary.amount} ${summary.stablecoinTicker}，网络 ${summary.network.displayNameZh}。需要您的明确批准。"
       }
     } else {
       when (lang) {
         AppLanguage.ARABIC -> "تعذر تمرير الطلب: ${plan.blockingReason}"
         AppLanguage.FRENCH -> "Demande bloquée : ${plan.blockingReason}"
         AppLanguage.ENGLISH -> "Request blocked: ${plan.blockingReason}"
+        AppLanguage.RUSSIAN -> "Запрос заблокирован: ${plan.blockingReason}"
+        AppLanguage.CHINESE -> "请求已被拦截：${plan.blockingReason}"
       }
     }
   }

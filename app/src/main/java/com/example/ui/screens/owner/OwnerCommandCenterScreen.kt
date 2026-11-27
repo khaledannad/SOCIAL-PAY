@@ -2,6 +2,7 @@ package com.example.ui.screens.owner
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -159,15 +160,67 @@ fun OwnerCommandCenterScreen(
                   Text("GLOBAL CONNECTIVITY HUB", color = BrandPrimaryBg, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                  AppLanguage.entries.forEach { l ->
-                    FilterChip(
-                      selected = lang == l,
-                      onClick = { onLanguageSelected(l) },
-                      label = { Text(l.code.uppercase(), fontSize = 10.sp) },
-                      modifier = Modifier.height(30.dp)
-                    )
-                  }
+                var showOwnerLangDialog by remember { mutableStateOf(false) }
+                OutlinedButton(
+                  onClick = { showOwnerLangDialog = true },
+                  shape = RoundedCornerShape(8.dp),
+                  border = BorderStroke(1.dp, BrandPrimaryAccent.copy(alpha = 0.5f)),
+                  contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                  modifier = Modifier.height(32.dp).testTag("owner_lang_btn")
+                ) {
+                  Text(text = "${lang.flag} ${lang.code.uppercase()}", fontSize = 11.sp, color = BrandTextPrimary, fontWeight = FontWeight.Bold)
+                  Spacer(modifier = Modifier.width(2.dp))
+                  Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = BrandPrimaryAccent, modifier = Modifier.size(14.dp))
+                }
+
+                if (showOwnerLangDialog) {
+                  AlertDialog(
+                    onDismissRequest = { showOwnerLangDialog = false },
+                    containerColor = BrandSecondaryBg,
+                    title = {
+                      Text(
+                        text = tr(lang, "اختر لغة الإدارة", "Select Language", "Choisir la langue", "Выберите язык", "选择语言"),
+                        color = BrandTextPrimary,
+                        fontWeight = FontWeight.Bold
+                      )
+                    },
+                    text = {
+                      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AppLanguage.entries.forEach { l ->
+                          val isSelected = lang == l
+                          Surface(
+                            color = if (isSelected) BrandPrimaryAccent.copy(alpha = 0.2f) else BrandPrimaryBg,
+                            shape = RoundedCornerShape(8.dp),
+                            border = if (isSelected) BorderStroke(1.5.dp, BrandPrimaryAccent) else BorderStroke(1.dp, BrandSurfaceBorder),
+                            modifier = Modifier
+                              .fillMaxWidth()
+                              .clickable {
+                                onLanguageSelected(l)
+                                showOwnerLangDialog = false
+                              }
+                          ) {
+                            Row(
+                              modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                              horizontalArrangement = Arrangement.spacedBy(8.dp),
+                              verticalAlignment = Alignment.CenterVertically
+                            ) {
+                              Text(l.flag, fontSize = 18.sp)
+                              Text(
+                                text = l.displayName,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) BrandPrimaryAccent else BrandTextPrimary
+                              )
+                            }
+                          }
+                        }
+                      }
+                    },
+                    confirmButton = {
+                      TextButton(onClick = { showOwnerLangDialog = false }) {
+                        Text(tr(lang, "إغلاق", "Close", "Fermer", "Закрыть", "关闭"), color = BrandPrimaryAccent)
+                      }
+                    }
+                  )
                 }
               }
             }

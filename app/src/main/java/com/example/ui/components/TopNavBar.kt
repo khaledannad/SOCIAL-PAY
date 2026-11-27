@@ -241,7 +241,7 @@ fun TopNavBar(
                   ) {
                     Icon(Icons.Default.Translate, contentDescription = null, tint = EmeraldPrimary)
                     Text(
-                      text = tr(currentLanguage, "اختر لغة التطبيق", "Select Language", "Choisir la langue"),
+                      text = tr(currentLanguage, "اختر لغة التطبيق", "Select Language", "Choisir la langue", "Выберите язык", "选择语言"),
                       fontWeight = FontWeight.Bold,
                       style = MaterialTheme.typography.titleMedium
                     )
@@ -269,15 +269,21 @@ fun TopNavBar(
                           horizontalArrangement = Arrangement.SpaceBetween,
                           verticalAlignment = Alignment.CenterVertically
                         ) {
-                          Text(
-                            text = lang.displayName,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) EmeraldPrimary else BrandTextPrimary
-                          )
+                          Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                          ) {
+                            Text(text = lang.flag, fontSize = 18.sp)
+                            Text(
+                              text = lang.displayName,
+                              fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                              color = if (isSelected) EmeraldPrimary else BrandTextPrimary
+                            )
+                          }
                           if (isSelected) {
                             Icon(
                               imageVector = Icons.Default.Check,
-                              contentDescription = tr(currentLanguage, "محدد", "Selected", "Sélectionné"),
+                              contentDescription = tr(currentLanguage, "محدد", "Selected", "Sélectionné", "Выбрано", "已选择"),
                               tint = EmeraldPrimary,
                               modifier = Modifier.size(18.dp)
                             )
@@ -290,7 +296,7 @@ fun TopNavBar(
                 confirmButton = {},
                 dismissButton = {
                   TextButton(onClick = { showLanguageMenu = false }) {
-                    Text(tr(currentLanguage, "إغلاق", "Close", "Fermer"), color = EmeraldPrimary)
+                    Text(tr(currentLanguage, "إغلاق", "Close", "Fermer", "Закрыть", "关闭"), color = EmeraldPrimary)
                   }
                 }
               )

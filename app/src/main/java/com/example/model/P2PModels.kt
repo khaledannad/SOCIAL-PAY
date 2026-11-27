@@ -153,20 +153,29 @@ data class AirdropReward(
   val tag: String
 )
 
-enum class AppLanguage(val code: String, val displayName: String, val isRtl: Boolean) {
-  ARABIC("ar", "العربية", true),
-  ENGLISH("en", "English", false),
-  FRENCH("fr", "Français", false)
+enum class AppLanguage(
+  val code: String,
+  val displayName: String,
+  val isRtl: Boolean,
+  val flag: String = "🌐"
+) {
+  ARABIC("ar", "العربية", true, "🇸🇦"),
+  ENGLISH("en", "English", false, "🇬🇧"),
+  RUSSIAN("ru", "Русский", false, "🇷🇺"),
+  CHINESE("zh", "中文", false, "🇨🇳"),
+  FRENCH("fr", "Français", false, "🇫🇷")
 }
 
 enum class PaymentAccountType(
   val titleAr: String,
   val titleEn: String,
-  val titleFr: String
+  val titleFr: String,
+  val titleRu: String = titleEn,
+  val titleZh: String = titleEn
 ) {
-  BANK_IBAN("حساب بنكي / IBAN", "Bank Account / IBAN", "Compte Bancaire / IBAN"),
-  DIGITAL_WALLET("محفظة إلكترونية", "Digital Wallet", "Portefeuille Électronique"),
-  INSTANT_RAIL("تحويل فوري / BaridiMob", "Instant Payment Rail", "Paiement Instantané")
+  BANK_IBAN("حساب بنكي / IBAN", "Bank Account / IBAN", "Compte Bancaire / IBAN", "Банковский счет / IBAN", "银行账户 / IBAN"),
+  DIGITAL_WALLET("محفظة إلكترونية", "Digital Wallet", "Portefeuille Électronique", "Электронный кошелек", "电子钱包"),
+  INSTANT_RAIL("تحويل فوري / BaridiMob", "Instant Payment Rail", "Paiement Instantané", "Мгновенный платеж", "即时支付通道")
 }
 
 data class UserBankAccount(

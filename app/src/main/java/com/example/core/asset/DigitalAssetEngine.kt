@@ -9,6 +9,8 @@ enum class BlockchainNetwork(
   val displayNameAr: String,
   val displayNameEn: String,
   val displayNameFr: String,
+  val displayNameRu: String = displayNameEn,
+  val displayNameZh: String = displayNameEn,
   val nativeFeeAsset: String,
   val requiredConfirmations: Int,
   val blockExplorerUrl: String,

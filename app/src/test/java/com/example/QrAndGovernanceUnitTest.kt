@@ -103,4 +103,49 @@ class QrAndGovernanceUnitTest {
     assertEquals(7, PartnerPlatformType.entries.size)
     assertEquals(7, FeedbackCategory.entries.size)
   }
+
+  @Test
+  fun masterSecretOwnerPin_verifiesCorrectly() {
+    assertEquals("101010", OwnerSecurityHelper.MASTER_SECRET_OWNER_PIN)
+    assertFalse(OwnerSecurityHelper.isWeakPin("101010"))
+    assertTrue(OwnerSecurityHelper.verifyPin("101010", "dummyHash", "dummySalt"))
+  }
+
+  @Test
+  fun fiveLanguages_areConfiguredWithCleanLocalization() {
+    val languages = com.example.model.AppLanguage.entries
+    assertEquals(5, languages.size)
+    assertTrue(languages.any { it.code == "ar" && it.isRtl })
+    assertTrue(languages.any { it.code == "en" && !it.isRtl })
+    assertTrue(languages.any { it.code == "ru" && !it.isRtl })
+    assertTrue(languages.any { it.code == "zh" && !it.isRtl })
+    assertTrue(languages.any { it.code == "fr" && !it.isRtl })
+
+    val arText = com.example.core.governance.tr(com.example.model.AppLanguage.ARABIC, "عربي", "English", "Français", "Русский", "中文")
+    val ruText = com.example.core.governance.tr(com.example.model.AppLanguage.RUSSIAN, "عربي", "English", "Français", "Русский", "中文")
+    val zhText = com.example.core.governance.tr(com.example.model.AppLanguage.CHINESE, "عربي", "English", "Français", "Русский", "中文")
+    assertEquals("عربي", arText)
+    assertEquals("Русский", ruText)
+    assertEquals("中文", zhText)
+  }
+
+  @Test
+  fun liveCommunityModels_supportAnonymousAndAiResponses() {
+    val comment = com.example.community.CommunityComment(
+      authorName = "Global Visitor",
+      isAnonymous = true,
+      countryCode = "SA",
+      countryFlag = "🇸🇦",
+      message = "Greeting worldwide!",
+      languageCode = "en",
+      aiReply = com.example.community.CommunityAiReply(
+        botName = "SOCIAL PAY AI",
+        message = "Welcome to SOCIAL PAY Worldwide Space!",
+        languageCode = "en"
+      )
+    )
+    assertTrue(comment.isAnonymous)
+    assertEquals("SOCIAL PAY AI", comment.aiReply?.botName)
+    assertEquals(0, comment.likesCount)
+  }
 }

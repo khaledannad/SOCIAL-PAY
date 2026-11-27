@@ -330,10 +330,10 @@ fun SocialHomeScreen(
           modifier = Modifier.weight(1f).testTag("home_ledger_card")
         )
         QuickActionCard(
-          title = tr(currentLanguage, "تعليقات التحسين", "Direct Feedback", "Avis Directs"),
-          subtitle = tr(currentLanguage, "شاركنا رأيك مباشرة", "Help Improve App", "Votre avis"),
-          icon = Icons.Default.RateReview,
-          tint = BrandIntelligenceAccent,
+          title = "LIVE COMMENTAIRE 🌍",
+          subtitle = tr(currentLanguage, "مجتمع عالمي مفتوح", "Global Social Space", "Espace Social Mondial", "Мировое сообщество", "全球开放社区"),
+          icon = Icons.Default.Public,
+          tint = BrandPrimaryAccent,
           onClick = onOpenFeedback,
           modifier = Modifier.weight(1f).testTag("home_feedback_card")
         )

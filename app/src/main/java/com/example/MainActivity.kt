@@ -112,6 +112,7 @@ fun P2PAppContent(
   var preselectedStablecoinEntry by remember { mutableStateOf<StablecoinRegistryEntry?>(null) }
   var showWalletQrSheet by remember { mutableStateOf(false) }
   var showFeedbackDialog by remember { mutableStateOf(false) }
+  var showLiveCommentaireScreen by remember { mutableStateOf(false) }
   var showOwnerPortalDialog by remember { mutableStateOf(initialOpenOwner) }
   val snackbarHostState = remember { SnackbarHostState() }
 
@@ -385,7 +386,7 @@ fun P2PAppContent(
           onSubmitPartnerApplication = { comp, sector, plat, web, cname, cemail, cphone, country, vol, notes ->
             viewModel.submitPartnerApplication(comp, sector, plat, web, cname, cemail, cphone, country, vol, notes)
           },
-          onOpenDirectFeedback = { showFeedbackDialog = true },
+          onOpenDirectFeedback = { showLiveCommentaireScreen = true },
           onOpenWalletQr = { showWalletQrSheet = true }
         )
       } else if (showInvoicesScreen) {
@@ -419,7 +420,7 @@ fun P2PAppContent(
               onNavigateToMerchant = { currentTab = P2PNavigationItem.MERCHANT },
               onOpenWalletQr = { showWalletQrSheet = true },
               onOpenPartners = { showPartnerScreen = true },
-              onOpenFeedback = { showFeedbackDialog = true },
+              onOpenFeedback = { showLiveCommentaireScreen = true },
               onSelectTransaction = { currentTab = P2PNavigationItem.TRANSACTIONS }
             )
           }
@@ -525,6 +526,15 @@ fun P2PAppContent(
         onSubmitFeedback = { name, email, category, rating, msg ->
           viewModel.submitFeedback(name, email, category, rating, msg, "IN_APP")
         }
+      )
+    }
+
+    // LIVE COMMENTAIRE 🌍 — Worldwide Open Social Space
+    if (showLiveCommentaireScreen) {
+      LiveCommentaireScreen(
+        currentLanguage = uiState.currentLanguage,
+        currentUserName = uiState.userOfficeProfile.fullName.ifBlank { null },
+        onDismiss = { showLiveCommentaireScreen = false }
       )
     }
 

@@ -493,9 +493,9 @@ fun PartnerAndSettingsScreen(
           shape = RoundedCornerShape(12.dp),
           modifier = Modifier.weight(1f).heightIn(min = 48.dp)
         ) {
-          Icon(Icons.Default.RateReview, contentDescription = null, modifier = Modifier.size(18.dp))
+          Icon(Icons.Default.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = BrandPrimaryAccent)
           Spacer(modifier = Modifier.width(6.dp))
-          Text(tr(currentLanguage, "ملاحظات التحسين", "App Feedback", "Avis Directs"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+          Text("LIVE COMMENTAIRE 🌍", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = BrandPrimaryAccent)
         }
       }
     }
@@ -520,7 +520,7 @@ fun PartnerAndSettingsScreen(
                 modifier = Modifier.clickable { onLanguageSelected(lang) }.testTag("lang_btn_${lang.code}")
               ) {
                 Text(
-                  text = lang.displayName,
+                  text = "${lang.flag} ${lang.displayName}",
                   fontWeight = FontWeight.Bold,
                   fontSize = 12.sp,
                   color = if (isSelected) BrandPrimaryBg else BrandTextPrimary,

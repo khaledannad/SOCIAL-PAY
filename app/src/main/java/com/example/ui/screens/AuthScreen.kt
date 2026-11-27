@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.example.R
+import com.example.core.governance.tr
 import com.example.data.CredentialAuthHelper
 import com.example.data.PlatformGovernanceRepository
 import com.example.model.AppLanguage
@@ -58,6 +60,7 @@ fun AuthScreen(
   var errorMessage by remember { mutableStateOf<String?>(null) }
   var infoMessage by remember { mutableStateOf<String?>(null) }
   var showDirectFeedbackDialog by remember { mutableStateOf(false) }
+  var showLiveCommentaireScreen by remember { mutableStateOf(false) }
   var queuedFeedbackCount by remember { mutableStateOf(governanceRepo.pendingLocalFeedbackCount()) }
 
   // Silent single-option auto sign-in for returning authorized accounts
@@ -76,17 +79,23 @@ fun AuthScreen(
         isInteractiveSigningIn = false
         result.onFailure { err ->
           if (err is GetCredentialCancellationException) {
-            infoMessage = when (currentLanguage) {
-              AppLanguage.ARABIC -> "تم إلغاء نافذة تسجيل الدخول. اختر حساب Google للمتابعة."
-              AppLanguage.FRENCH -> "Connexion annulée. Sélectionnez un compte Google pour continuer."
-              AppLanguage.ENGLISH -> "Sign-in was cancelled. Select a Google account to continue."
-            }
+            infoMessage = tr(
+              currentLanguage,
+              ar = "تم إلغاء نافذة تسجيل الدخول. اختر حساب Google للمتابعة.",
+              en = "Sign-in was cancelled. Select a Google account to continue.",
+              fr = "Connexion annulée. Sélectionnez un compte Google pour continuer.",
+              ru = "Вход отменен. Выберите аккаунт Google для продолжения.",
+              zh = "登录已取消。请选择 Google 账户以继续。"
+            )
           } else {
-            errorMessage = err.localizedMessage ?: when (currentLanguage) {
-              AppLanguage.ARABIC -> "تعذر تسجيل الدخول عبر Google. تحقق من الاتصال وحاول مجدداً."
-              AppLanguage.FRENCH -> "Échec de la connexion Google. Vérifiez votre réseau et réessayez."
-              AppLanguage.ENGLISH -> "Google Sign-In failed. Check your connection and try again."
-            }
+            errorMessage = err.localizedMessage ?: tr(
+              currentLanguage,
+              ar = "تعذر تسجيل الدخول عبر Google. تحقق من الاتصال وحاول مجدداً.",
+              en = "Google Sign-In failed. Check your connection and try again.",
+              fr = "Échec de la connexion Google. Vérifiez votre réseau et réessayez.",
+              ru = "Ошибка входа через Google. Проверьте сеть и повторите попытку.",
+              zh = "Google 登录失败。请检查网络后重试。"
+            )
           }
         }
       }
@@ -130,11 +139,14 @@ fun AuthScreen(
           OutlinedButton(
             onClick = {
               onRequestOwnerAfterAuth()
-              infoMessage = when (currentLanguage) {
-                AppLanguage.ARABIC -> "اختر حساب المالك عبر Google ثم أدخل الرقم السري للمالك."
-                AppLanguage.FRENCH -> "Connectez-vous avec le compte propriétaire puis saisissez le PIN."
-                AppLanguage.ENGLISH -> "Sign in with the owner Google account to verify your Owner PIN."
-              }
+              infoMessage = tr(
+                currentLanguage,
+                ar = "اختر حساب المالك عبر Google ثم أدخل الرقم السري للمالك.",
+                en = "Sign in with the owner Google account to verify your Owner PIN.",
+                fr = "Connectez-vous avec le compte propriétaire puis saisissez le PIN.",
+                ru = "Войдите в аккаунт владельца Google для ввода секретного PIN.",
+                zh = "使用所有者 Google 账户登录以验证所有者密码。"
+              )
               startGoogleSignIn()
             },
             shape = RoundedCornerShape(10.dp),
@@ -152,38 +164,119 @@ fun AuthScreen(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = when (currentLanguage) {
-                AppLanguage.ARABIC -> "دخول المالك"
-                AppLanguage.FRENCH -> "Accès Propriétaire"
-                AppLanguage.ENGLISH -> "Owner PIN"
-              },
+              text = tr(
+                currentLanguage,
+                ar = "دخول المالك",
+                en = "Owner Portal",
+                fr = "Accès Propriétaire",
+                ru = "Вход владельца",
+                zh = "所有者入口"
+              ),
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
               color = GoldAccent
             )
           }
 
-          Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            AppLanguage.entries.forEach { lang ->
-              val selected = lang == currentLanguage
-              FilterChip(
-                selected = selected,
-                onClick = { onLanguageSelected(lang) },
-                label = {
+          // Single Unified Language Selector Button
+          var showLanguageMenuDialog by remember { mutableStateOf(false) }
+
+          OutlinedButton(
+            onClick = { showLanguageMenuDialog = true },
+            shape = RoundedCornerShape(10.dp),
+            border = BorderStroke(1.dp, BrandPrimaryAccent.copy(alpha = 0.55f)),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+              containerColor = BrandSecondaryBg,
+              contentColor = BrandPrimaryAccent
+            ),
+            modifier = Modifier
+              .heightIn(min = 40.dp)
+              .testTag("auth_single_language_btn")
+          ) {
+            Text(text = currentLanguage.flag, fontSize = 13.sp)
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+              text = currentLanguage.displayName,
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold,
+              color = BrandTextPrimary
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Icon(
+              imageVector = Icons.Default.ArrowDropDown,
+              contentDescription = "Select Language",
+              tint = BrandPrimaryAccent,
+              modifier = Modifier.size(16.dp)
+            )
+          }
+
+          if (showLanguageMenuDialog) {
+            AlertDialog(
+              onDismissRequest = { showLanguageMenuDialog = false },
+              containerColor = BrandSecondaryBg,
+              title = {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                  Icon(Icons.Default.Translate, contentDescription = null, tint = BrandPrimaryAccent)
                   Text(
-                    text = lang.code.uppercase(),
-                    fontSize = 11.sp,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                    text = tr(currentLanguage, "اختر لغة التطبيق", "Select Language", "Choisir la langue", "Выберите язык", "选择语言"),
+                    fontWeight = FontWeight.Bold,
+                    color = BrandTextPrimary,
+                    style = MaterialTheme.typography.titleMedium
                   )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                  selectedContainerColor = BrandPrimaryAccent.copy(alpha = 0.2f),
-                  selectedLabelColor = BrandPrimaryAccent,
-                  labelColor = BrandTextSecondary
-                ),
-                modifier = Modifier.testTag("auth_lang_${lang.code}")
-              )
-            }
+                }
+              },
+              text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                  AppLanguage.entries.forEach { lang ->
+                    val isSelected = lang == currentLanguage
+                    Surface(
+                      color = if (isSelected) BrandPrimaryAccent.copy(alpha = 0.2f) else BrandPrimaryBg,
+                      shape = RoundedCornerShape(10.dp),
+                      border = if (isSelected) BorderStroke(1.5.dp, BrandPrimaryAccent) else BorderStroke(1.dp, BrandSurfaceBorder),
+                      modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                          onLanguageSelected(lang)
+                          showLanguageMenuDialog = false
+                        }
+                        .testTag("lang_option_${lang.code}")
+                    ) {
+                      Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                      ) {
+                        Text(text = lang.flag, fontSize = 20.sp)
+                        Text(
+                          text = lang.displayName,
+                          fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                          color = if (isSelected) BrandPrimaryAccent else BrandTextPrimary,
+                          fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (isSelected) {
+                          Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = BrandPrimaryAccent,
+                            modifier = Modifier.size(18.dp)
+                          )
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              confirmButton = {
+                TextButton(onClick = { showLanguageMenuDialog = false }) {
+                  Text(text = tr(currentLanguage, "إغلاق", "Close", "Fermer", "Закрыть", "关闭"), color = BrandPrimaryAccent)
+                }
+              }
+            )
           }
         }
 
@@ -242,11 +335,14 @@ fun AuthScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-          text = when (currentLanguage) {
-            AppLanguage.ARABIC -> "تسجيل الدخول الآمن لإدارة حسابك"
-            AppLanguage.FRENCH -> "Connexion sécurisée à votre profil"
-            AppLanguage.ENGLISH -> "Secure Sign-In & Account Portal"
-          },
+          text = tr(
+            currentLanguage,
+            ar = "تسجيل الدخول الآمن لإدارة حسابك",
+            en = "Secure Sign-In & Account Portal",
+            fr = "Connexion sécurisée à votre profil",
+            ru = "Безопасный вход и управление аккаунтом",
+            zh = "安全登录与账户管理"
+          ),
           style = MaterialTheme.typography.headlineSmall,
           fontWeight = FontWeight.ExtraBold,
           color = BrandTextPrimary,
@@ -256,11 +352,14 @@ fun AuthScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-          text = when (currentLanguage) {
-            AppLanguage.ARABIC -> "قم بمزامنة ملفك الشخصي وربط حساباتك البنكية وإصدار رموز QR للمدفوعات الفورية عبر Firebase Authentication."
-            AppLanguage.FRENCH -> "Synchronisez votre profil, liez vos comptes et générez des QR codes P2P via Google et Firebase."
-            AppLanguage.ENGLISH -> "Manage your profile, link bank payout accounts, and generate scannable P2P wallet QR requests securely."
-          },
+          text = tr(
+            currentLanguage,
+            ar = "قم بمزامنة ملفك الشخصي وربط حساباتك البنكية وإصدار رموز QR للمدفوعات الفورية عبر Firebase Authentication.",
+            en = "Manage your profile, link bank payout accounts, and generate scannable P2P wallet QR requests securely.",
+            fr = "Synchronisez votre profil, liez vos comptes et générez des QR codes P2P via Google et Firebase.",
+            ru = "Синхронизируйте профиль, привязывайте счета и создавайте QR-коды для мгновенных платежей.",
+            zh = "同步您的个人资料，绑定银行收款账户并通过二维码进行点对点即时收付款。"
+          ),
           style = MaterialTheme.typography.bodyMedium,
           color = BrandTextSecondary,
           textAlign = TextAlign.Center,
@@ -283,31 +382,43 @@ fun AuthScreen(
             SecurityFeatureRow(
               icon = Icons.Default.QrCode2,
               accent = BrandPrimaryAccent,
-              title = when (currentLanguage) {
-                AppLanguage.ARABIC -> "محفظة QR وطلبات P2P قابلة للمسح"
-                AppLanguage.FRENCH -> "QR Code Portefeuille P2P Scannable"
-                AppLanguage.ENGLISH -> "Scannable ZXing Wallet QR Requests"
-              },
-              subtitle = when (currentLanguage) {
-                AppLanguage.ARABIC -> "أنشئ وامسح رموز QR الحقيقية لطلبات الدفع بين النظراء دون حجز أموال."
-                AppLanguage.FRENCH -> "Générez et scannez de vrais QR codes de paiement P2P."
-                AppLanguage.ENGLISH -> "Create and scan real ISO QR payment requests peer-to-peer with non-custodial rails."
-              }
+              title = tr(
+                currentLanguage,
+                ar = "محفظة QR وطلبات P2P قابلة للمسح",
+                en = "Scannable ZXing Wallet QR Requests",
+                fr = "QR Code Portefeuille P2P Scannable",
+                ru = "QR-кошелек и сканируемые P2P запросы",
+                zh = "可扫描的 ZXing 钱包二维码收付款"
+              ),
+              subtitle = tr(
+                currentLanguage,
+                ar = "أنشئ وامسح رموز QR الحقيقية لطلبات الدفع بين النظراء دون حجز أموال.",
+                en = "Create and scan real ISO QR payment requests peer-to-peer with non-custodial rails.",
+                fr = "Générez et scannez de vrais QR codes de paiement P2P.",
+                ru = "Создавайте и сканируйте реальные QR-коды для прямых платежей.",
+                zh = "创建并扫描标准二维码进行点对点支付，非托管结算。"
+              )
             )
             HorizontalDivider(color = BrandSurfaceBorder.copy(alpha = 0.6f))
             SecurityFeatureRow(
               icon = Icons.Default.AccountBalance,
               accent = BrandSecondaryAccent,
-              title = when (currentLanguage) {
-                AppLanguage.ARABIC -> "ربط الحسابات البنكية والتسجيل للشركاء"
-                AppLanguage.FRENCH -> "Comptes Bancaires & Partenaires Multi-Secteurs"
-                AppLanguage.ENGLISH -> "Linked Payouts & All-Sector Partners"
-              },
-              subtitle = when (currentLanguage) {
-                AppLanguage.ARABIC -> "اربط حساباتك أو سجّل شركتك في جميع القطاعات التجارية مع عزل سحابي صارم."
-                AppLanguage.FRENCH -> "Liez vos IBAN et enregistrez votre entreprise dans tous les secteurs."
-                AppLanguage.ENGLISH -> "Link IBANs and register companies across 12 sectors under zero-trust Firestore isolation."
-              }
+              title = tr(
+                currentLanguage,
+                ar = "ربط الحسابات البنكية والتسجيل للشركاء",
+                en = "Linked Payouts & All-Sector Partners",
+                fr = "Comptes Bancaires & Partenaires Multi-Secteurs",
+                ru = "Привязка счетов и партнерская регистрация",
+                zh = "绑定收款账户与全行业合作入驻"
+              ),
+              subtitle = tr(
+                currentLanguage,
+                ar = "اربط حساباتك أو سجّل شركتك في جميع القطاعات التجارية مع عزل سحابي صارم.",
+                en = "Link IBANs and register companies across 12 sectors under zero-trust Firestore isolation.",
+                fr = "Liez vos IBAN et enregistrez votre entreprise dans tous les secteurs.",
+                ru = "Привязывайте IBAN и регистрируйте компании в 12 секторах бизнеса.",
+                zh = "绑定 IBAN 并在 12 个行业领域入驻您的企业，零信任数据隔离。"
+              )
             )
           }
         }
@@ -374,17 +485,24 @@ fun AuthScreen(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-              text = when {
-                isAutoSigningIn -> when (currentLanguage) {
-                  AppLanguage.ARABIC -> "جاري التحقق من الجلسة الآمنة..."
-                  AppLanguage.FRENCH -> "Vérification de la session..."
-                  AppLanguage.ENGLISH -> "Checking secure session..."
-                }
-                else -> when (currentLanguage) {
-                  AppLanguage.ARABIC -> "جاري الاتصال بحساب Google..."
-                  AppLanguage.FRENCH -> "Connexion à Google..."
-                  AppLanguage.ENGLISH -> "Signing in with Google..."
-                }
+              text = if (isAutoSigningIn) {
+                tr(
+                  currentLanguage,
+                  ar = "جاري التحقق من الجلسة الآمنة...",
+                  en = "Checking secure session...",
+                  fr = "Vérification de la session...",
+                  ru = "Проверка безопасной сессии...",
+                  zh = "正在验证安全会话..."
+                )
+              } else {
+                tr(
+                  currentLanguage,
+                  ar = "جاري الاتصال بحساب Google...",
+                  en = "Signing in with Google...",
+                  fr = "Connexion à Google...",
+                  ru = "Подключение к Google...",
+                  zh = "正在连接 Google..."
+                )
               },
               fontWeight = FontWeight.Bold,
               fontSize = 15.sp
@@ -397,11 +515,14 @@ fun AuthScreen(
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-              text = when (currentLanguage) {
-                AppLanguage.ARABIC -> "المتابعة بحساب Google"
-                AppLanguage.FRENCH -> "Continuer avec Google"
-                AppLanguage.ENGLISH -> "Continue with Google"
-              },
+              text = tr(
+                currentLanguage,
+                ar = "المتابعة بحساب Google",
+                en = "Continue with Google",
+                fr = "Continuer avec Google",
+                ru = "Продолжить с Google",
+                zh = "通过 Google 账户继续"
+              ),
               fontWeight = FontWeight.ExtraBold,
               fontSize = 16.sp
             )
@@ -410,7 +531,7 @@ fun AuthScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Secondary Registration Actions Row: Partner Portal (All Sectors) + Direct Feedback
+        // Secondary Registration Actions Row: Partner Portal (All Sectors) + LIVE COMMENTAIRE 🌍
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -418,18 +539,21 @@ fun AuthScreen(
           OutlinedButton(
             onClick = {
               onRequestPartnerAfterAuth()
-              infoMessage = when (currentLanguage) {
-                AppLanguage.ARABIC -> "سجّل الدخول بحساب Google لإكمال تسجيل شركتك في أي قطاع تجاري."
-                AppLanguage.FRENCH -> "Connectez-vous avec Google pour enregistrer votre entreprise partenaire."
-                AppLanguage.ENGLISH -> "Sign in with Google to open All-Sector Partner & Company Registration."
-              }
+              infoMessage = tr(
+                currentLanguage,
+                ar = "سجّل الدخول بحساب Google لإكمال تسجيل شركتك في أي قطاع تجاري.",
+                en = "Sign in with Google to open All-Sector Partner & Company Registration.",
+                fr = "Connectez-vous avec Google pour enregistrer votre entreprise partenaire.",
+                ru = "Войдите через Google для регистрации партнерской компании.",
+                zh = "通过 Google 登录以完成全行业企业合作入驻。"
+              )
               startGoogleSignIn()
             },
             shape = RoundedCornerShape(14.dp),
             border = BorderStroke(1.dp, BrandSecondaryAccent.copy(alpha = 0.65f)),
             modifier = Modifier
               .weight(1f)
-              .heightIn(min = 50.dp)
+              .heightIn(min = 52.dp)
               .testTag("auth_partner_portal_btn")
           ) {
             Icon(
@@ -440,43 +564,65 @@ fun AuthScreen(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-              text = when (currentLanguage) {
-                AppLanguage.ARABIC -> "تسجيل الشركاء"
-                AppLanguage.FRENCH -> "Partenaires"
-                AppLanguage.ENGLISH -> "Partner Signup"
-              },
+              text = tr(
+                currentLanguage,
+                ar = "تسجيل الشركاء",
+                en = "Partner Signup",
+                fr = "Partenaires",
+                ru = "Партнеры",
+                zh = "合作注册"
+              ),
               fontSize = 12.sp,
               fontWeight = FontWeight.Bold,
               color = BrandSecondaryAccent
             )
           }
 
+          // LIVE COMMENTAIRE 🌍 — Worldwide Open Social Space
           OutlinedButton(
-            onClick = { showDirectFeedbackDialog = true },
+            onClick = { showLiveCommentaireScreen = true },
             shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.dp, BrandIntelligenceAccent.copy(alpha = 0.65f)),
+            border = BorderStroke(
+              1.2.dp,
+              Brush.horizontalGradient(
+                listOf(BrandPrimaryAccent, BrandSecondaryAccent, BrandIntelligenceAccent)
+              )
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+              containerColor = BrandSecondaryBg.copy(alpha = 0.9f)
+            ),
             modifier = Modifier
               .weight(1f)
-              .heightIn(min = 50.dp)
-              .testTag("auth_direct_feedback_btn")
+              .heightIn(min = 52.dp)
+              .testTag("auth_live_commentaire_btn")
           ) {
             Icon(
-              imageVector = Icons.Default.RateReview,
-              contentDescription = "Direct User Feedback",
-              tint = BrandIntelligenceAccent,
+              imageVector = Icons.Default.Public,
+              contentDescription = "LIVE COMMENTAIRE 🌍",
+              tint = BrandPrimaryAccent,
               modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(
-              text = when (currentLanguage) {
-                AppLanguage.ARABIC -> if (queuedFeedbackCount > 0) "تعليقاتك ($queuedFeedbackCount)" else "ملاحظات التحسين"
-                AppLanguage.FRENCH -> "Avis Directs"
-                AppLanguage.ENGLISH -> if (queuedFeedbackCount > 0) "Feedback ($queuedFeedbackCount)" else "Direct Feedback"
-              },
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Bold,
-              color = BrandIntelligenceAccent
-            )
+            Column {
+              Text(
+                text = "LIVE COMMENTAIRE",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = BrandPrimaryAccent
+              )
+              Text(
+                text = tr(
+                  currentLanguage,
+                  ar = "مجتمع عالمي 🌍",
+                  en = "Global Space 🌍",
+                  fr = "Espace Mondial 🌍",
+                  ru = "Мировое сообщество 🌍",
+                  zh = "全球社区 🌍"
+                ),
+                fontSize = 9.sp,
+                color = BrandTextSecondary
+              )
+            }
           }
         }
       }
@@ -520,6 +666,13 @@ fun AuthScreen(
           errorMessage = err.localizedMessage
         }
       }
+    )
+  }
+
+  if (showLiveCommentaireScreen) {
+    LiveCommentaireScreen(
+      currentLanguage = currentLanguage,
+      onDismiss = { showLiveCommentaireScreen = false }
     )
   }
 }
